@@ -1,0 +1,450 @@
+{{define "title"}}PixelProxy{{end}}
+
+{{define "head"}}
+
+<style>
+
+/* Show it's not fixed to the top */
+body {
+  min-height: 75rem;
+}
+.jumbotron {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  margin-bottom: 0;
+}
+.progress {
+  background-color: #aaa;
+  margin: 10px 10px 10px 10px;
+  height: 24px;
+}
+.record-name, .merge-name {
+  margin-top: 4px;
+}
+.proxy-forwarding-group {
+  padding-left: 50px;
+}
+
+.proxy-forward-button {
+  margin-left: 20px;
+}
+
+</style>
+
+{{end}}
+{{/* End "head" */}}
+
+{{define "body"}}
+
+<div class="py-5 bg-light container-fluid">
+  <div class="jumbotron">
+    <dl class="row">
+      <dt class="col-sm-2">Start Time</dt>
+      <dd class="col-sm-9">{{.Status.StartTime | timestr}}</dd>
+
+      <dt class="col-sm-2">Uptime</dt>
+      <dd class="col-sm-9">{{.Status.Uptime | durationstr}}</dd>
+
+      <dt class="col-sm-2">Proxy Forwarding</dt>
+      <dd class="col-sm-9">
+        <div>
+          {{.Status.ProxyForwarding | boolstr}}
+          {{if not .Status.DisablingProxyForwarding}}
+          <button id="disable-proxy-forward-button"
+              class="btn btn-warning proxy-forward-button">
+            Disable Proxy Forward
+          </button>
+          {{else}}
+          <button id="enable-proxy-forward-button"
+              class="btn btn-primary proxy-forward-button">
+            Enable Proxy Forward
+          </button>
+          {{end}}
+        </div>
+      </dd>
+
+      {{if .DefaultFileName}}
+      <dt class="col-sm-2">Default File</dt>
+      <dd class="col-sm-9">{{.DefaultFileName}}</dd>
+      {{end}}
+    </dl>
+
+  {{with .Status}}
+    {{if $st := .PlaybackStatus}}
+    <hr class="my-4">
+    <div>
+      <div>
+        <h3>
+          Playing:
+          {{if $st.Paused}}
+          <mark>(Paused)</mark>
+          {{end}}
+          <small class="text-muted">{{$st.Name}}</small>
+        </h3>
+      </div>
+      <div>
+        <dl class="row">
+          <dt class="col-sm-2">Position</dt>
+          <dd class="col-sm-9">{{$st.Position | durationstr}}</dd>
+          <dt class="col-sm-2">Duration</dt>
+          <dd class="col-sm-9">{{$st.Duration | durationstr}}</dd>
+          <dt class="col-sm-2">Total Playback</dt>
+          <dd class="col-sm-9">
+            {{$st.TotalPlaytime | durationstr}}, {{$st.Rounds}}
+            cycle{{$st.Rounds | maybeplural}}
+          </dd>
+          {{if len $st.NoRouteDevices}}
+          <dt class="col-sm-2">Missing Routes</dt>
+          <dd class="col-sm-9">
+            <ul>
+            {{range $st.NoRouteDevices}}
+            <li>{{.}}</li>
+            {{end}}
+            </ul>
+          {{end}}
+        </dl>
+      </div>
+      <div id="playback-progress" class="progress" style="width:80%">
+        <div
+          {{if $st.Paused}}
+            class="progress-bar progress-bar-striped bg-warning"
+          {{else}}
+            class="progress-bar progress-bar-animated progress-bar-striped bg-success"
+          {{end}}
+            style="width:{{$st.Progress}}%">
+          {{$st.Progress}}%
+        </div>
+      </div>
+      <div>
+        <div class="btn-group btn-group-lg" role="group"
+            aria-label="Playback Controls">
+          {{if $st.Paused}}
+            <button id="resume-button" class="btn btn-warning">
+              Resume
+            </button>
+          {{else}}
+            <button id="pause-button" class="btn btn-primary">
+              Pause
+            </button>
+          {{end}}
+          <button class="btn btn-danger stop-button">
+            Stop
+          </button>
+        </div>
+      </div>
+    </div>
+    {{end}}
+
+    <hr class="my-4">
+    {{if $st := .RecordStatus}}
+    <div class="status-text">
+      <h3>
+        Recording:
+        <small class="text-muted">{{$st.Name}}</small>
+        {{if $st.Error}}
+        <mark>Error: {{$st.Error}}</mark>
+        {{end}}
+      </h3>
+    </div>
+    <div>
+      <dl class="row">
+        <dt class="col-sm-2">Duration</dt>
+        <dd class="col-sm-9">{{$st.Duration | durationstr}}</dd>
+        <dt class="col-sm-2">Events</dt>
+        <dd class="col-sm-9">{{$st.Events}}</dd>
+        <dt class="col-sm-2">Bytes</dt>
+        <dd class="col-sm-9">{{$st.Bytes | bytefmt}}</dd>
+      </dl>
+    </div>
+    {{end}}
+
+    <div>
+      {{if .RecordStatus}}
+      <button class="btn btn-danger stop-button">
+        Stop
+      </button>
+      {{else}}
+      <div class="input-group mb-3">
+        <div class="input-group-prepend">
+          <button id="record-button" class="btn btn-secondary">
+            Record
+          </button>
+        </div>
+        <input type="text" class="form-control" id="record-name"
+            placeholder="Recorded File Name"></input>
+      {{end}}
+      </div>
+    </div>
+
+    {{end}}{{/* End of .Status */}}
+
+    <div id="merge-panel" class="d-none">
+      <hr class="my-4">
+      <div class="sm-8">
+        <table
+            class="table table-sm table-striped table-bordered
+                   table-responsive">
+          <thead class="thead-light">
+            <tr>
+              <th scope="col"><h3>Merge Files</h3></th>
+            </tr>
+          </thead>
+          <tbody id="merge-files">
+          </tbody>
+        </table>
+      </div>
+      <div class="input-group mb-9">
+        <div class="input-group-prepend">
+          <div class="btn-group" role="group" aria-label="Merge Controls">
+            <button id="merge-clear-button" class="btn btn-warning btn-small">
+              Clear
+            </button>
+            <button id="merge-button" class="btn btn-info">
+              Merge
+            </button>
+          </div>
+        </div>
+        <input type="text" class="form-control" id="merge-name"
+            placeholder="Merged File Name"></input>
+      </div>
+    </div>
+
+  <!-- End controls section -->
+  </div>
+
+  <div>
+    <h2>Files ({{len .Files}}):</h2>
+    {{if .Files}}
+      <div class="table-responsive">
+        <table class="table table-striped table-sm">
+          <thead class="thead-dark">
+            <tr>
+              <th scope="col">Controls</td>
+              <th scope="col">Name</td>
+              <th scope="col">Devices</th>
+              <th scope="col">Strips</th>
+              <th scope="col">LEDs</td>
+              <th scope="col">Data (B/#)</td>
+              <th scope="col">Created</td>
+              <th scope="col">Duration</td>
+              <th scope="col">Compression</td>
+              <th scope="col">Disk Size</td>
+              <th scope="col">Manage</td>
+            </tr>
+          </thead>
+
+          <tbody>
+          {{range $index := .Files}}
+            <tr>
+              <td>
+                <div class="btn-toolbar" role="toolbar" aria-label="Operations">
+                  <div class="btn-group mr-2" role="group">
+                    <button id="play-button-{{$index}}" class="btn btn-primary"
+                        data-target="{{.Name}}">
+                      Play
+                    </button>
+                  </div>
+                </div>
+              </td>
+              <td>{{.Name}}</td>
+              <td>{{.NumDevices}}</td>
+              <td>{{.MaxStrips}}</td>
+              <td>{{.MaxPixelsPerStrip}}</td>
+              <td>{{.NumBytes | bytefmt}} / {{.NumEvents}}</td>
+              <td>{{.Created | timestr}}</td>
+              <td>{{.Duration | durationstr}}</td>
+              <td>{{.Compression}}</td>
+              <td>{{.DiskBytes | bytefmt}}</td>
+              <td>
+                <div class="btn-toolbar" role="toolbar" aria-label="Manage">
+                  <div class="btn-group" role="group">
+                    <button id="merge-add-button-{{$index}}"
+                        class="btn btn-info" data-target="{{.Name}}">
+                      Merge
+                    </button>
+                    <button id="delete-button-{{$index}}" class="btn btn-danger"
+                        data-name="{{.Name}}" data-toggle="modal"
+                        data-target="#confirm-delete">
+                      Delete
+                    </button>
+                    {{if .IsDefault }}
+                    <button id="clear-default-button-{{$index}}"
+                       class="btn btn-primary bg-warning">
+                      Unset
+                    </button>
+                    {{else}}
+                    <button id="set-default-button-{{$index}}"
+                        class="btn bg-secondary" data-target="{{.Name}}">
+                      Set
+                    </button>
+                    {{end}}
+                </div>
+              </td>
+            </tr>
+            {{end}}
+          </tbody>
+        </table>
+      </div>
+    {{else}}
+      <h3>No Files</h3>
+    {{end}}
+
+  </div>
+</div> <!-- main container -->
+
+<div class="modal fade" id="confirm-delete" tabindex="-1" role="dialog"
+    aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="modal-title">Confirm Delete</h4>
+      </div>
+      <div class="modal-body">
+        <p>You are about to delete one save file, this procedure is
+        irreversible. Do you want to proceed?</p>
+        <p class="file-name"></p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default"
+            data-dismiss="modal">Cancel</button>
+        <a class="btn btn-danger btn-ok">Delete</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+{{end}}
+{{/* End "body" */}}
+
+{{define "scripts"}}
+
+<script type="module">
+
+function postAndReload(url, data) {
+  $.ajax({
+    url: url,
+    method: 'POST',
+  }).done(function() {
+    location.reload();
+  });
+}
+
+let mergeList = [];
+function updateMergePanel() {
+  let mergePanel = $('#merge-panel');
+  let mergeButton = $('#merge-button');
+  if (mergeList.length === 0) {
+    mergePanel.hide();
+    return;
+  }
+
+  let mergeFiles = $('#merge-files');
+  mergeFiles.empty();
+  mergeList.forEach(function(e) {
+    mergeFiles.append('<tr><td>' + e + '</td></tr>');
+  });
+
+  mergePanel.show();
+  mergePanel.removeClass('d-none');
+}
+
+(function() {
+  // Configure the Record button to POST a record command and reload.
+  $('#record-button').click(function() {
+    name = $('#record-name').val();
+    if (!name) return;
+
+    postAndReload('/_api/recordFile/' + encodeURIComponent(name));
+  });
+
+  // Configure all Play buttons to POST a play command and reload.
+  $('[id^="play-button-"]').click(function(e) {
+    name = $(e.target).attr('data-target');
+    postAndReload('/_api/playFile/' + encodeURIComponent(name));
+  });
+
+  // Configure all merge buttons to POST a play command and reload.
+  $('[id^="merge-add-button-"]').click(function(e) {
+    name = $(e.target).attr('data-target');
+    mergeList.push(name);
+    updateMergePanel();
+  });
+  $('#merge-clear-button').click(function(e) {
+    mergeList.length = 0;
+    updateMergePanel();
+  });
+  $('#merge-button').click(function(e) {
+    if (mergeList.length === 0) return;
+
+    name = $('#merge-name').val();
+    if (!name) return;
+
+    let query = mergeList.map(function(e) {
+      return 'src=' + encodeURIComponent(e);
+    });
+    postAndReload(
+        '/_api/mergeFiles/' + encodeURIComponent(name) + '?' + query.join('&'));
+
+    mergeList.length = 0;
+    updateMergePanel();
+  });
+
+  // Configure all SetDefault buttons to POST a play command and reload.
+  $('[id^="set-default-button-"]').click(function(e) {
+    name = $(e.target).attr('data-target');
+    postAndReload('/_api/setDefault/' + encodeURIComponent(name));
+  });
+
+  // Configure all SetDefault buttons to POST a play command and reload.
+  $('[id^="clear-default-button-"]').click(function(e) {
+    // No target name, so empty name.
+    postAndReload('/_api/clearDefault');
+  });
+
+  $('#confirm-delete').on('show.bs.modal', function(e) {
+    let name = $(e.relatedTarget).data('name');
+    $('.btn-ok').data('name', name);
+    $('.file-name').html('Delete file: <strong>' + name + '</strong>');
+  });
+
+  // Bind click to OK button within popup
+  $('#confirm-delete').on('click', '.btn-ok', function(e) {
+    let button = $(e.currentTarget);
+    let modalDiv = $(e.delegateTarget);
+    let name = button.data('name');
+
+    modalDiv.addClass('loading');
+
+    postAndReload('/_api/deleteFile/' + encodeURIComponent(name));
+  });
+
+  // Configure all Stop buttons to POST a stop command and reload.
+  $('.stop-button').click(function() {
+    postAndReload('/_api/stop');
+  });
+
+  // Configure the Pause button to POST a pause command and reload.
+  $('#pause-button').click(function() {
+    postAndReload('/_api/pause');
+  });
+
+  // Configure the Resume button to POST a pause command and reload.
+  $('#resume-button').click(function() {
+    postAndReload('/_api/resume');
+  });
+
+  // Configure proxy forwarding enable/disable buttons.
+  $('#disable-proxy-forward-button').click(function() {
+    postAndReload('/_api/proxyForwarding/disable');
+  });
+  $('#enable-proxy-forward-button').click(function() {
+    postAndReload('/_api/proxyForwarding/enable');
+  });
+})();
+
+</script>
+
+{{end}}
+{{/* End "scripts" */}}
+
+{{template "templates/scaffold.html" .}}

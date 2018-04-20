@@ -1,0 +1,67 @@
+{{define "title"}}PixelProxy Logs ({{.Name}}){{end}}
+
+{{define "head"}}
+
+<style>
+/* Show it's not fixed to the top */
+body {
+  min-height: 75rem;
+}
+
+.log-message {
+  font-family: monospace;
+}
+.log-level-debug {
+  background-color: #DDDDDD;
+}
+.log-level-info {
+  background-color: #7FDBFF;
+}
+.log-level-warn {
+  background-color: #FF851B;
+}
+.log-level-error {
+  background-color: #FF4136;
+}
+</style>
+
+{{end}}
+{{/* End "head" */}}
+
+
+{{define "body"}}
+
+<div class="py-5 bg-light">
+  <div class="table-responsive-sm">
+    <h2>{{.Name}} Logs ({{.Logs | len}})</h2>
+    {{ if .Logs }}
+      <table class="table table-sm">
+        <thead class="thead-dark">
+          <tr>
+            <th scope="col">Level</td>
+            <th scope="col">Time</id>
+            <th scope="col">Caller</td>
+            <th scope="col">Message</td>
+          </tr>
+        </thead>
+
+        <tbody>
+        {{ range .Logs }}
+          <tr class="log-level-{{.Level}}">
+            <td>{{.Level}}</td>
+            <td>{{.Time | timestr}}</id>
+            <td>{{.Caller}}</td>
+            <td class="log-message">{{.Message}}</td>
+          </tr>
+        {{ end }}
+        </tbody>
+      </table>
+    {{ end }}
+  </div>
+
+</div> <!-- container -->
+
+{{end}}
+{{/* End "body" */}}
+
+{{template "templates/scaffold.html" .}}

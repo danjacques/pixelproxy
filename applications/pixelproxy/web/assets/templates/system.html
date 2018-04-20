@@ -1,0 +1,108 @@
+{{define "title"}}PixelProxy System{{end}}
+
+{{define "head"}}
+
+<style>
+  h3 {
+    padding: 20px;
+  }
+</style>
+
+{{end}}
+{{/* End "head" */}}
+
+{{define "body"}}
+
+<div class="py-5 bg-light">
+  <div class="jumbotron">
+    <h3>System: {{.State.Status}}</h3>
+
+    <dl class="row justify-content-lg-center">
+      <div class="btn-group btn-group-lg" role="group" aria-label="Controls">
+        <button id="reboot-button" class="btn btn-warning"
+            data-toggle="modal" data-target="#confirm"
+            data-name="reboot">
+          Reboot
+        </button>
+        <button id="shutdown-button" class="btn btn-danger"
+            data-toggle="modal" data-target="#confirm"
+            data-name="shutdown">
+          Shutdown
+        </button>
+      </div>
+    </dl>
+  </div>
+</div>
+
+<div class="modal fade" id="confirm" tabindex="-1" role="dialog"
+    aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="modal-title">Confirm</h4>
+      </div>
+      <div class="modal-body">
+        <p class="operation-name"></p>
+        <p>
+          Once started, this process is irreversible. Do you want to proceed?
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default"
+            data-dismiss="modal">Cancel</button>
+        <a class="btn btn-danger btn-ok">Proceed</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+{{end}}
+{{/* End "body" */}}
+
+{{define "scripts"}}
+
+<script>
+
+function postAndReload(url, data) {
+  $.ajax({
+    url: url,
+    method: 'POST',
+  }).done(function() {
+    location.reload();
+  });
+}
+
+(function() {
+  $('#confirm').on('show.bs.modal', function(e) {
+    let operation = $(e.relatedTarget).data('name');
+    $('.btn-ok').data('name', operation);
+    $('.operation-name').html(
+        'You are about to <strong>' + operation + '</strong>!');
+  });
+
+  // Bind click to OK button within popup
+  $('#confirm').on('click', '.btn-ok', function(e) {
+    let button = $(e.currentTarget);
+    let modalDiv = $(e.delegateTarget);
+    let operation = button.data('name');
+
+    modalDiv.addClass('loading');
+    modalDiv.modal('hide');
+
+    switch (operation) {
+    case 'shutdown':
+      postAndReload('/_api/system/shutdown');
+      break;
+    case 'reboot':
+      postAndReload('/_api/system/reboot');
+      break
+    }
+  });
+})();
+
+</script>
+
+{{end}}
+{{/* End "scripts" */}}
+
+{{template "templates/scaffold.html" .}}

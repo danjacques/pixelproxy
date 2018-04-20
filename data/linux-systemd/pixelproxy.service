@@ -1,0 +1,37 @@
+# /etc/systemd/system/pixelproxy.service
+#
+# systemd service configuration file for PixelProxy.
+# https://github.com/danjacques/pixelproxy/
+#
+# After installing into a `systemd` directory, enable the service by running:
+#
+#     systemctl enable pixelproxy.service
+#
+# This service can be customized by providing an override
+# file, via:
+#
+#     systemctl edit pixelproxy.service
+#
+
+[Unit]
+Description=PixelProxy, a PixelPusher Proxy
+Documentation=https://github.com/danjacques/pixelproxy/
+
+# Start after the network has come online.
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+Restart=always
+User=pixelproxy
+
+ExecStart=/usr/bin/pixelproxy
+
+# Wait 30 seconds after sending SIGTERM, then kill.
+KillSignal=SIGTERM
+TimeoutStopSec=30
+SendSIGKILL=yes
+
+[Install]
+WantedBy=multi-user.target

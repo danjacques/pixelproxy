@@ -1,0 +1,105 @@
+{{define "title"}}PixelProxy View{{end}}
+
+{{define "head"}}
+
+<style>
+html body {
+  background-color: black;
+}
+h3 {
+  font-size: 18px;
+}
+.device-id {
+  font-family: "Monospace";
+}
+.pixel-render {
+  max-width: 100%;
+}
+.table td {
+  text-align: center;
+}
+</style>
+
+{{end}}
+{{/* End "head" */}}
+
+{{define "body"}}
+
+{{ $nonce := .Now | timenonce }}
+<div class="py-5 bg-dark">
+  <div>
+    <h3 class="text-muted">
+      Last refreshed:
+      <span id="last-refreshed">Never</span>
+    </h3>
+  </div>
+  <table class="table table-dark table-striped table-sm table-bordered
+                table-responsive">
+    <thead>
+      <tr>
+        <th scope="col">Device</th>
+        <th scope="col">Group</th>
+        <th scope="col">Cont</th>
+        <th scope="col">View</th>
+    </thead>
+    <tbody>
+      {{range .Devices}}{{if .HasSnapshot}}
+      <tr>
+        <td class="device-id">{{.ID}}</td>
+        <td>{{.Group}}</td>
+        <td>{{.Controller}}</td>
+        <td>
+          <img
+              class="pixel-render"
+              data-base-url="/strips/{{.ID}}.svg">
+          </img>
+        </td>
+      </tr>
+      {{end}}{{end}}
+    </tbody>
+  </table>
+</div>
+
+{{end}}
+{{/* End "body" */}}
+
+{{define "scripts"}}
+
+<script type="module">
+
+let refreshPeriodMs = {{.RefreshIntervalMillis}};
+
+function reloadImages() {
+  // Get the current time.
+  let d = new Date();
+
+  $('.pixel-render').each(function(index, e) {
+    let pixelRender = $(e);
+    let url = pixelRender.data('base-url');
+    pixelRender.attr('src', url + '?' + d.getTime());
+  });
+
+  // Update "last refreshed".
+  $('#last-refreshed').text(d.toString());
+}
+
+(function() {
+  // Automatically reload images page every 10 seconds.
+  $(document).ready(function() {
+    // Initial image load.
+    reloadImages();
+
+    // Reload every period.
+    setInterval(function() {
+      reloadImages();
+    }, refreshPeriodMs);
+  });
+
+})();
+
+</script>
+
+{{end}}
+{{/* End "scripts" */}}
+
+{{template "templates/scaffold.html" .}}

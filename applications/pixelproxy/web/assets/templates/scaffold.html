@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="description" content="">
+  <meta name="author" content="">
+
+  <link rel="apple-touch-icon" sizes="57x57" href="icons/apple-icon-57x57.png">
+  <link rel="apple-touch-icon" sizes="60x60" href="icons/apple-icon-60x60.png">
+  <link rel="apple-touch-icon" sizes="72x72" href="icons/apple-icon-72x72.png">
+  <link rel="apple-touch-icon" sizes="76x76" href="icons/apple-icon-76x76.png">
+  <link rel="apple-touch-icon" sizes="114x114" href="icons/apple-icon-114x114.png">
+  <link rel="apple-touch-icon" sizes="120x120" href="icons/apple-icon-120x120.png">
+  <link rel="apple-touch-icon" sizes="144x144" href="icons/apple-icon-144x144.png">
+  <link rel="apple-touch-icon" sizes="152x152" href="icons/apple-icon-152x152.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-icon-180x180.png">
+  <link rel="icon" type="image/png" sizes="192x192"  href="icons/android-icon-192x192.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="96x96" href="icons/favicon-96x96.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16x16.png">
+  <meta name="msapplication-TileColor" content="#ffffff">
+  <meta name="msapplication-TileImage" content="icons/ms-icon-144x144.png">
+  <meta name="theme-color" content="#ffffff">
+
+
+  <title>{{block "title" .}}PixelProxy{{end}}</title>
+
+  <!-- Include Bootstrap -->
+  <link href="/bs/third_party/bootstrap.min.css" rel="stylesheet" media="screen">
+
+  {{block "head" .}}{{end}}
+
+</head>
+
+<body>
+
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <button class="navbar-toggler" type="button" data-toggle="collapse"
+        data-target="#navbarSupportedContent"
+        aria-controls="navbarSupportedContent"
+        aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <a class="navbar-brand" href="/index.html">PixelProxy</a>
+
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav mr-auto">
+        <li class="nav-item">
+          <a class="nav-link" href="/index.html">Playback</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="/devices.html">Devices</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="/render.html">Preview</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="/system.html">System</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="/all-logs.html">Logs</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="/error-logs.html">Errors</a>
+        </li>
+      </ul>
+    </div>
+  </nav>
+
+  {{block "body" .}}{{end}}
+
+  <!-- Include Bootstrap JS -->
+  <script src="/bs/third_party/jquery.min.js"></script>
+  <script src="/bs/third_party/popper.min.js" type="module"></script>
+  <script src="/bs/third_party/bootstrap.min.js"></script>
+
+  {{block "scripts" .}}{{end}}
+
+</body>
+</html>

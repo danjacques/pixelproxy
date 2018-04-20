@@ -1,0 +1,78 @@
+{{define "title"}}PixelProxy Devices{{end}}
+
+{{define "head"}}
+
+<style>
+
+td.device-type-discovered {
+  background-color: lightyellow;
+}
+td.device-type-proxy {
+  background-color: lightblue;
+}
+td.device-id {
+  font-family: "Monospace";
+}
+td.centered {
+  text-align: center;
+}
+
+</style>
+
+{{end}}
+{{/* End "head" */}}
+
+{{define "body"}}
+
+<div>
+  <h2>Devices ({{.Devices | len}})</h2>
+</div>
+  {{if .Devices}}
+  <div class="table-responsive">
+    <table class="table table-striped table-bordered table-sm">
+      <thead class="thead-dark">
+        <tr>
+          <th scope="col">Type</td>
+          <th scope="col">Grp</td>
+          <th scope="col">Cont</td>
+          <th scope="col">Strips</td>
+          <th scope="col">Pixels</td>
+          <th scope="col">ID</id>
+          <th scope="col">Address</td>
+          <th scope="col">Sent (B/#)</td>
+          <th scope="col">Received (B/#)</td>
+          <th scope="col">Created</td>
+          <th scope="col">Observed</td>
+        </tr>
+      </thead>
+
+      <tbody>
+      {{range .Devices}}
+        <tr>
+          <td class="device-type-{{.Type}}">{{.Type}}</td>
+          <td class="centered">{{.Group}}</td>
+          <td class="centered">{{.Controller}}</td>
+          <td class="centered">{{.Strips}}</td>
+          <td class="centered">{{.Pixels}}</td>
+          <td class="device-id">
+            {{.ID}}
+            {{if .ProxiedID}}&#8633;{{.ProxiedID}}{{end}}
+          </td>
+          <td>{{.Network}} @ {{.Address}}</td>
+          <td>{{.BytesSent | bytefmt}} / {{.PacketsSent}}</td>
+          <td>{{.BytesReceived | bytefmt}} / {{.PacketsReceived}}</td>
+          <td>{{.Created | timestr}}</td>
+          <td>{{.LastObserved | timestr}}</td>
+        </tr>
+      {{ end }}
+      </tbody>
+    </table>
+  </div>
+  {{else}}
+    <h3>No Devices</h3>
+  {{end}}
+
+{{end}}
+{{/* End "body" */}}
+
+{{template "templates/scaffold.html" .}}

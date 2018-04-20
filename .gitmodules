@@ -1,0 +1,10 @@
+[submodule "web/bootstrap/third_party/bootstrap"]
+	path = web/bootstrap/third_party/bootstrap
+	url = https://github.com/twbs/bootstrap
+[submodule "web/bootstrap/third_party/jquery"]
+	path = web/bootstrap/third_party/jquery
+	url = https://github.com/jquery/jquery
+[submodule "web/bootstrap/third_party/popper.js"]
+	path = web/bootstrap/third_party/popper.js
+	url = https://github.com/FezVrasta/popper.js
+	branch = tags/v1.14.1
